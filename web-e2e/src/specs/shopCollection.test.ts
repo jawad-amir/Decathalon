@@ -41,7 +41,6 @@ test.describe("Shop Collection", () => {
         await shopPage.addItemToBag(page);
         await shopPage.bagItems(page);
         await shopPage.goToCheckout(page);
-     //   await shopPage.clickShopCollection(page);
         await shopPage.fillPersonalInformationForm(testData);
         await shopPage.fillAddressForm(testData1); 
         await shopPage.selectHomeDelivery(page);
