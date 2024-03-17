@@ -1,0 +1,139 @@
+name: '[PR] Web e2e Checker'
+
+on:
+  pull_request:
+    paths:
+      - 'apps/web-e2e/**'
+      - 'apps/web/**'
+
+concurrency:
+  group: pr-web-e2e ${{ github.ref }}
+  cancel-in-progress: false # cancel previous runs, if true then it will stop the execution due to which garbage data won't be cleaned up
+
+env:
+  KAJABI_NPM_TOKEN: ${{ secrets.KAJABI_NPM_TOKEN }}
+  GITHUB_TOKEN: ${{ github.token }}
+  PULL_REQUEST_NUMBER: ${{ github.event.number }}
+  DEPLOY_PREVIEW_BASE_URL: https://deploy-preview-${{ github.event.number }}.communities.newkajabi-staging.com
+  BASE_URL: https://communities.newkajabi-staging.com
+  HASURA_PROD_ENDPOINT: ${{ secrets.HASURA_ENDPOINT }}/v1/graphql
+  HASURA_PROD_GRAPHQL_ADMIN_SECRET: ${{ secrets.HASURA_GRAPHQL_ADMIN_SECRET }}
+  HASURA_STAGING_ENDPOINT: ${{ secrets.HASURA_STAGING_ENDPOINT }}/v1/graphql
+  HASURA_STAGING_GRAPHQL_ADMIN_SECRET: ${{ secrets.HASURA_STAGING_ENDPOINT_SECRET }}
+
+jobs:
+  check-web-app:
+    runs-on: ubuntu-latest
+    strategy:
+      max-parallel: 2
+      fail-fast: false
+      matrix:
+        community: [
+            automationtestingpullrequeststaging,
+            # automationtestingpullrequestwebkit,
+          ]
+        include:
+          - community: automationtestingpullrequeststaging
+            browser: Chromium
+          # - community: automationtestingpullrequestwebkit
+          #   browser: Webkit
+    steps:
+      - name: checkout repo
+        uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version-file: '.nvmrc'
+          cache: 'yarn'
+      - name: install deps
+        run: yarn
+      - name: eslint check
+        run: yarn nx lint web-e2e
+      - name: typescript check
+        run: yarn nx tsc web-e2e
+      - name: Wait netlify deploy
+        id: wait_netlify_deploy
+        run: |
+          node tools/github-actions/pr-web-e2e/wait-netlify-deploy.js > netlify_status
+          cat netlify_status
+          NETLIFY_STATUS=$(cat netlify_status | tail -n 1)
+          if [[ $NETLIFY_STATUS == 'ready' ]]; then
+            echo "base_url=$DEPLOY_PREVIEW_BASE_URL" >> $GITHUB_OUTPUT
+          fi
+
+      - name: ${{ matrix.browser }}-Win-P0-Critical-(Heroes)-${{ github.event.number }}
+        uses: saucelabs/saucectl-run-action@v3
+        env:
+          BASE_URL: ${{ steps.wait_netlify_deploy.outputs.base_url }}
+          KAJABI_COMMUNITY_ALPHA_NAME: ${{ matrix.community }}
+        with:
+          saucectl-version: v0.173.2
+          sauce-username: ${{ secrets.SAUCE_USERNAME }}
+          sauce-access-key: ${{ secrets.SAUCE_ACCESS_KEY }}
+          skip-run: false # run tests
+          config-file: .sauce/pr-config.yml
+          select-suite: '[PR] ${{ matrix.browser }} Win : P0 - Critical (Heroes)'
+
+      - name: ${{ matrix.browser }}-Win-P0-Critical-(Members)-${{ github.event.number }}
+        uses: saucelabs/saucectl-run-action@v3
+        env:
+          BASE_URL: ${{ steps.wait_netlify_deploy.outputs.base_url }}
+          KAJABI_COMMUNITY_ALPHA_NAME: ${{ matrix.community }}
+        with:
+          saucectl-version: v0.173.2
+          sauce-username: ${{ secrets.SAUCE_USERNAME }}
+          sauce-access-key: ${{ secrets.SAUCE_ACCESS_KEY }}
+          skip-run: false # run tests
+          config-file: .sauce/pr-config.yml
+          select-suite: '[PR] ${{ matrix.browser }} Win : P0 - Critical (Members)'
+
+      - name: ${{ matrix.browser }}-Win-P1-High-(Heroes)-${{ github.event.number }}
+        uses: saucelabs/saucectl-run-action@v3
+        env:
+          BASE_URL: ${{ steps.wait_netlify_deploy.outputs.base_url }}
+          KAJABI_COMMUNITY_ALPHA_NAME: ${{ matrix.community }}
+        with:
+          saucectl-version: v0.173.2
+          sauce-username: ${{ secrets.SAUCE_USERNAME }}
+          sauce-access-key: ${{ secrets.SAUCE_ACCESS_KEY }}
+          skip-run: false # run tests
+          config-file: .sauce/pr-config.yml
+          select-suite: '[PR] ${{ matrix.browser }} Win : P1 - High (Heroes)'
+
+      - name: ${{ matrix.browser }}-Win-P1-High-(Members)-${{ github.event.number }}
+        uses: saucelabs/saucectl-run-action@v3
+        env:
+          BASE_URL: ${{ steps.wait_netlify_deploy.outputs.base_url }}
+          KAJABI_COMMUNITY_ALPHA_NAME: ${{ matrix.community }}
+        with:
+          saucectl-version: v0.173.2
+          sauce-username: ${{ secrets.SAUCE_USERNAME }}
+          sauce-access-key: ${{ secrets.SAUCE_ACCESS_KEY }}
+          skip-run: false # run tests
+          config-file: .sauce/pr-config.yml
+          select-suite: '[PR] ${{ matrix.browser }} Win : P1 - High (Members)'
+
+      - name: ${{ matrix.browser }}-Win-P2-Medium-(Heroes)-${{ github.event.number }}
+        uses: saucelabs/saucectl-run-action@v3
+        env:
+          BASE_URL: ${{ steps.wait_netlify_deploy.outputs.base_url }}
+          KAJABI_COMMUNITY_ALPHA_NAME: ${{ matrix.community }}
+        with:
+          saucectl-version: v0.173.2
+          sauce-username: ${{ secrets.SAUCE_USERNAME }}
+          sauce-access-key: ${{ secrets.SAUCE_ACCESS_KEY }}
+          skip-run: false # run tests
+          config-file: .sauce/pr-config.yml
+          select-suite: '[PR] ${{ matrix.browser }} Win : P2 - Medium (Heroes)'
+
+      - name: ${{ matrix.browser }}-Win-P2-Medium-(Members)-${{ github.event.number }}
+        uses: saucelabs/saucectl-run-action@v3
+        env:
+          BASE_URL: ${{ steps.wait_netlify_deploy.outputs.base_url }}
+          KAJABI_COMMUNITY_ALPHA_NAME: ${{ matrix.community }}
+        with:
+          saucectl-version: v0.173.2
+          sauce-username: ${{ secrets.SAUCE_USERNAME }}
+          sauce-access-key: ${{ secrets.SAUCE_ACCESS_KEY }}
+          skip-run: false # run tests
+          config-file: .sauce/pr-config.yml
+          select-suite: '[PR] ${{ matrix.browser }} Win : P2 - Medium (Members)'
