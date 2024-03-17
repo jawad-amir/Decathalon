@@ -33,15 +33,15 @@ test.describe("Shop Collection", () => {
         };
 
 
-        test.step('Navigate to the URL', async () => {
+        await test.step('Navigate to the URL', async () => {
         await goToShopCollectionPage(page);
         });
 
-        test.step('Navigate to Shop Collection/ Items', async () => {
+        await test.step('Navigate to Shop Collection/ Items', async () => {
         await clickShopCollection(page);
         });
 
-        test.step('Add Items to Bag', async () => {
+        await test.step('Add Items to Bag', async () => {
         await shopPage.clickItem1(page);
         await shopPage.addItemToBag(page);
         await shopPage.clickItem2(page);
@@ -50,12 +50,12 @@ test.describe("Shop Collection", () => {
         await shopPage.addItemToBag(page);
         });
 
-        test.step('Navigate to Bag in Header and Checkout', async () => {
+        await test.step('Navigate to Bag in Header and Checkout', async () => {
         await shopPage.bagItems(page);
         await shopPage.goToCheckout(page);
         });
 
-        test.step('Fill out the Required Information to Checkout', async () => {
+        await test.step('Fill out the Required Information to Checkout', async () => {
         await shopPage.fillPersonalInformationForm(testData);
         await shopPage.fillAddressForm(testData1); 
         await shopPage.selectHomeDelivery(page);
