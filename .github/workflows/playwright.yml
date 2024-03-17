@@ -4,6 +4,8 @@ on:
     branches: [ main, master ]
   pull_request:
     branches: [ main, master ]
+  paths:
+    - web-e2e\src
 jobs:
   test:
     timeout-minutes: 60
@@ -25,3 +27,9 @@ jobs:
         name: playwright-report
         path: playwright-report/
         retention-days: 30
+    
+    - name: ${{ matrix.browser }}-Win-P0-Critical-(Heroes)-${{ github.event.number }}
+      uses: saucelabs/saucectl-run-action@v3
+      with:
+        select-suite: web-e2e\src\specs\
+
